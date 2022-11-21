@@ -76,21 +76,49 @@ def line_regress_func(lst: List[List[int]]) -> Tuple[str, List[str], SetOption]:
   b = _regression_b_(x, y)
   return ( "line_regress_func", [f"y = {toFixed(a, 2)} + {toFixed(b, 2)}*x"], SetOption.NEXT )
 
+# def line_regress_column(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
+#   x = lst[0]
+#   y = lst[1]
+#   f = _line_regress_(x, y)
+#   result = []
+#   for v in x:
+#     result.append(f(v))
+#   return ("y^", result, SetOption.COLUMN)
+
+# def line_regress_row(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
+#   x = lst[0]
+#   y = lst[1]
+#   f = _line_regress_(x, y)
+#   result = []
+#   for v in x:
+#     result.append(f(v))
+#   return ("y^", result, SetOption.ROW)
+
 def line_regress(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
   x = lst[0]
   y = lst[1]
-  f = _line_regress_(x, y)
+  f = _line_regress_func_(x, y)
   result = []
   for v in x:
     result.append(f(v))
-  return ("y^", result, SetOption.COLUMN)
+  return ("y^", result, SetOption.AUTO)
 
-def _line_regress_(x: List[int], y: List[int]):
+def _line_regress_(x: List[int], y: List[int]) -> List[float]:
+  f = line_regress_func(x, y)
+  result = []
+  for v in x:
+    result.append(f(v))
+  return result
+
+
+def _line_regress_func_(x: List[int], y: List[int]):
   a = _regression_a_(x, y)
   b = _regression_b_(x, y)
   return lambda v : a + b * v
 
-  
+def regression_b(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
+  b = _regression_b_(lst[0], lst[1])
+  return ("b", [b], SetOption.NEXT)
 
 def _regression_b_(x: List[int], y: List[int]) -> float:
   powX = powLst(x)
@@ -120,7 +148,7 @@ def _R2_(x: List[int], y: List[int]) -> float:
   return 1 - (sse/sst)
 
 def _SSE_(x: List[int], y: List[int]) -> float:
-  regress_f = _line_regress_(x, y)
+  regress_f = _line_regress_func_(x, y)
   regressY = []
   for v in x:
     regressY.append(regress_f(v))
@@ -139,13 +167,21 @@ def _SST_(y: List[int]) -> float:
 def F_criterion(n): # n - количество наблюдений 
   return lambda lst: ("F критерий", [_F_criterion_(lst[0], lst[1])(n)], SetOption.NEXT)
 
+def F_fact_criterion(n): 
+  return lambda lst: ("F fact", [_F_fact_criterion(lst[0], lst[1])(n)], SetOption.NEXT)
+ 
+def _F_fact_criterion(x: List[int], y: List[int]):
+  r2 = _R2_(x, y)
+  return lambda n: (r2/(1-r2))*(n-2)
+  
+
 def _F_criterion_(x: List[int], y: List[int]):
   s2fact = _S2fact_(x, y)
   S2rest_f = _S2rest_(x, y)
   return lambda n: s2fact/(S2rest_f(n))
 
 def _S2fact_(x: List[int], y: List[int]) -> float:
-  regress_f = _line_regress_(x, y)
+  regress_f = _line_regress_func_(x, y)
   regressY = []
   for v in x:
     regressY.append(regress_f(v))
@@ -155,11 +191,48 @@ def _S2fact_(x: List[int], y: List[int]) -> float:
     result.append(pow(v - meanY, 2))
   return sum(result)/len(x)
 
+def S2rest(n) -> Tuple[str, List[float], SetOption]:
+  return lambda lst: ("S2rest", [_S2rest_(lst[0], lst[1])(n)], SetOption.NEXT)
+
+def Srest(n) -> Tuple[str, List[float], SetOption]:
+  return lambda lst: ("Srest", [_Srest_(lst[0], lst[1])(n)], SetOption.NEXT)
+
+def _Srest_(x: List[int], y: List[int]): 
+  sse = _SSE_(x, y)
+  return lambda n: sqrt(sse/(len(x) - n - 1))
 
 def _S2rest_(x: List[int], y: List[int]): # формула расчета факторной дисперсии
   sse = _SSE_(x, y)
-  return lambda n: sse/(n - len(x) - 1)
+  return lambda n: sse/(len(x) - n - 1)
 
+def average_approximation_error(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
+  result = _average_approximation_error_(lst[0], lst[1])
+  return ("Средняя ошибка аппроксимации", result, SetOption.ROW) 
+
+def _average_approximation_error_(x: List[int], y: List[int]) -> List[float]:
+  #надо бы отдельно засунуть
+  regress_f = _line_regress_func_(x, y)
+  regressY = []
+  for v in x:
+    regressY.append(regress_f(v))
+  result = []
+  for (y1, regress_y) in zip(y, regressY):
+    a = abs(((y1-regress_y)/y1)*100)
+    result.append(a)
+  return result
+
+def Mb(n):
+  return lambda lst: ("mb", [_Mb_(lst[0], lst[1])(n)], SetOption.NEXT)
+
+def _Mb_(x: List[int], y: List[int]): #Стандартная ошибка коэффициента регрессии
+  return lambda n: _Srest_(x, y)(n)/(RMSD(x)*sqrt(len(x)))
+
+def t_Student(n):
+  return lambda lst: ("критерия Стьюдента", [_t_Student_(lst[0], lst[1])(n)], SetOption.NEXT)
+
+
+def _t_Student_(x: List[int], y: List[int]):
+  return lambda n: _regression_b_(x, y)/_Mb_(x, y)(n)
 
 
 

@@ -8,7 +8,9 @@ from enum import Enum
 class SetOption(Enum):
   ROW = 1
   COLUMN = 2
-  NEXT = 3  
+  NEXT = 3
+  AUTO = 4
+
 
 
 
@@ -16,7 +18,7 @@ class DataTable(object):
   
   def __init__(self, frame: DataFrame, header_row=False, header_column=False):
     self.frame = frame
-    self.rows = rows(frame)
+    self.rows = rows(frame, header_row)
     self.columns = columns(frame)
     self.columns_result: Dict[str, List[float]] = {}
     self.rows_result: Dict[str, List[float]] = {}
@@ -49,13 +51,15 @@ class DataTable(object):
     (key, value, option) = func(list(self.rows.values()))
     result = {}
     result[key] = value
-    return self.set_result(option, result)
+    set_option = SetOption.COLUMN if option == SetOption.AUTO else option
+    return self.set_result(set_option, result)
 
   def from_columns(self, func: function) -> DataTable:
-    (key, value, option) = func(self.columns)
+    (key, value, option) = func(list(self.columns.values()))
     result = {}
     result[key] = value
-    return self.set_result(option, result)
+    set_option = SetOption.ROW if option == SetOption.AUTO else option
+    return self.set_result(set_option, result)
 
   def for_row(self, key: str, func: function) -> DataTable:
     result = { key: [] }
@@ -88,7 +92,7 @@ class DataTable(object):
       SetOption.COLUMN: lambda : self.add_column(result),
       SetOption.NEXT: lambda : self.add_special(result)}
     return switch(option, d)()
-  
+    
   def add_row(self, kv: Dict[str, List[float]]):
     result = copy(self.rows_result)
     for k in kv:
