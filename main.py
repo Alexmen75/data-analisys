@@ -2,7 +2,7 @@ from __future__ import annotations
 import pandas as pd
 from frame import rows, columns, ifNone
 from table import DataTable, SetOption
-from analysis import Mb, S2rest, Srest, average_approximation_error, line_regress, F_fact_criterion, RMSD, cov2, line_regress, mean, cov, dispersion, regression_a, regression_b, line_regress_func, correlation_coefficient, R2, F_criterion, t_Student
+from analysis import Mb, S2rest, Srest, average_approximation_error, custom_regress, customA, customB1, customB2, customBb1, customBb2, line_regress, F_fact_criterion, RMSD, cov2, line_regress, mean, cov, dispersion, multiply, regression_a, regression_b, line_regress_func, correlation_coefficient, R2, F_criterion, t_Student
 
 
 def test1():
@@ -52,12 +52,37 @@ def test3():
     .from_columns(t_Student(1))
     .from_columns(average_approximation_error)
     .dataframe())
-  result.to_excel("Задание8.xlsx")
-  # print(result)
-  
+  # result.to_excel("Задание8.xlsx")
+  print(result)
+
+def test4():
+  test4: str = r"TEST4.xlsx"
+  frame = pd.read_excel(test4)
+  table = DataTable(frame, header_row=True)
+  result = (
+    table
+    .for_column("mean", mean)
+    .for_column("q", RMSD)
+    .from_custom_column(["y", "x1"], correlation_coefficient, "r yx1")
+    .from_custom_column(["y", "x2"], correlation_coefficient, "r yx2")
+    .from_custom_column(["x1", "x2"], correlation_coefficient, "r x1x2")
+    .custom(customB1)
+    .custom(customB2)
+    .custom(customA)
+    .custom(custom_regress)
+    .custom(customBb1)
+    .custom(customBb2)
+    .dataframe()
+  )
+  print(result)
+
+
+
 
 def main():
-  test3()
+  # test2()
+  # test3()
+  test4()
 
 if __name__ == "__main__":
   main()

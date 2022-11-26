@@ -73,6 +73,29 @@ class DataTable(object):
       result[key].append(func(self.columns[column]))
     return self.set_result(SetOption.COLUMN, result)
 
+  def from_custom_column(self, columns: List[str], func: function, name: str) -> DataTable:
+    columns = self.get_lists(columns, self.columns)
+    (_, value, option) = func(columns)
+    result = {}
+    result[name] = value
+    set_option = SetOption.ROW if option == SetOption.AUTO else option
+    return self.set_result(set_option, result)
+
+  def custom(self, func:function) -> DataTable:
+    (key, value, option) = func(self.columns, self.rows, self.columns_result, self.rows_result, self.special)
+    result = {}
+    result[key] = value
+    return self.set_result(option, result)
+
+    pass
+
+  def get_lists(self, keys: List[str], dict: Dict[str, int]) -> List[List[int]]:
+    result:List[List[int]] = []
+    for key in keys:
+      result.append(dict[key])
+    return result
+     
+
   def dataframe(self) -> DataFrame:
     frame = copy(self.frame)
     for column in self.columns_result:

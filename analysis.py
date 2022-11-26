@@ -128,7 +128,7 @@ def _regression_b_(x: List[int], y: List[int]) -> float:
   _cov = _cov2_(x, y) # rofl
   return _cov / q
 
-def correlation_coefficient(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
+def correlation_coefficient(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]: # R
   result = _correlation_coefficient_(lst[0], lst[1])
   return ("коэффициент Пирсона", [result], SetOption.NEXT) 
 
@@ -234,10 +234,102 @@ def t_Student(n):
 def _t_Student_(x: List[int], y: List[int]):
   return lambda n: _regression_b_(x, y)/_Mb_(x, y)(n)
 
+def multiply(lst: List[List[int]]) -> Tuple[str, List[float], SetOption]:
+  return ("multiply", _multiply_(lst[0], lst[1]), SetOption.AUTO)
+
+def _multiply_(x: List[int], y: List[int]) -> List[float]:
+  result = []
+  for (x1, y1) in zip(x, y):
+    result.append(x1 * y1)
+  return result
 
 
 
 
 
 
+def customB1(
+  columns: Dict[str, List[float]], 
+  rows: Dict[str, List[float]], 
+  c_result: Dict[str, List[float]], 
+  r_result: Dict[str, List[float]],
+  special: Dict[str, List[float]]) -> Tuple[str, List[float], SetOption]:
+  qx1 = c_result["q"][1]
+  qy =  c_result["q"][0]
+  ryx1 = special["r yx1"][0]
+  ryx2 = special["r yx2"][0]
+  rx1x2 = special["r x1x2"][0]
+  result = (qy/qx1)*((ryx1 - ryx2*rx1x2)/(1-pow(rx1x2,2)))
+  return ("b1", [result], SetOption.NEXT)
 
+def customB2(
+  columns: Dict[str, List[float]], 
+  rows: Dict[str, List[float]], 
+  c_result: Dict[str, List[float]], 
+  r_result: Dict[str, List[float]],
+  special: Dict[str, List[float]]) -> Tuple[str, List[float], SetOption]:
+  qx2 = c_result["q"][2]
+  qy =  c_result["q"][0]
+  ryx1 = special["r yx1"][0]
+  ryx2 = special["r yx2"][0]
+  rx1x2 = special["r x1x2"][0]
+  result = (qy/qx2)*((ryx2 - ryx1*rx1x2)/(1-pow(rx1x2,2)))
+  return ("b2", [result], SetOption.NEXT)
+
+
+
+def customA(
+  columns: Dict[str, List[float]], 
+  rows: Dict[str, List[float]], 
+  c_result: Dict[str, List[float]], 
+  r_result: Dict[str, List[float]],
+  special: Dict[str, List[float]]) -> Tuple[str, List[float], SetOption]:
+  meanY = c_result["mean"][0]
+  meanX1 = c_result["mean"][1]
+  meanX2 = c_result["mean"][2]
+  b1 = special["b1"][0]
+  b2 = special["b2"][0]
+  result = meanY -b1*meanX1 - b2*meanX2
+  return ("a", [result], SetOption.NEXT)
+
+def custom_regress(
+  columns: Dict[str, List[float]], 
+  rows: Dict[str, List[float]], 
+  c_result: Dict[str, List[float]], 
+  r_result: Dict[str, List[float]],
+  special: Dict[str, List[float]]) -> Tuple[str, List[float], SetOption]:
+  x1 = columns["x1"]
+  x2 = columns["x2"]
+  a = special["a"][0]
+  b1 = special["b1"][0]
+  b2 = special["b2"][0]
+  f = lambda _v1, _v2: a + b1*_v1 + b2*_v2
+  result = []
+  for (v1, v2) in zip(x1, x2):
+    result.append(f(v1, v2))
+  
+  return ("y^", result, SetOption.ROW)
+
+def customBb1(
+  columns: Dict[str, List[float]], 
+  rows: Dict[str, List[float]], 
+  c_result: Dict[str, List[float]], 
+  r_result: Dict[str, List[float]],
+  special: Dict[str, List[float]]) -> Tuple[str, List[float], SetOption]:
+  b1 = special["b1"][0]
+  qx = c_result["q"][1]  
+  qy = c_result["q"][0]
+  result = [b1 * (qx/qy)]
+  return ("B1", result, SetOption.NEXT)
+  
+def customBb2(
+  columns: Dict[str, List[float]], 
+  rows: Dict[str, List[float]], 
+  c_result: Dict[str, List[float]], 
+  r_result: Dict[str, List[float]],
+  special: Dict[str, List[float]]) -> Tuple[str, List[float], SetOption]:
+  b2 = special["b2"][0]
+  qx = c_result["q"][2]  
+  qy = c_result["q"][0]
+  result = [b2 * (qx/qy)]
+  return ("B2", result, SetOption.NEXT)

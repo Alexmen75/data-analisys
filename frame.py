@@ -28,6 +28,13 @@ def columns(frame: DataFrame) -> Dict[str, float]:
     kv[column] = list(frame[column].values)
   return kv
 
+def _columns_(frame: DataFrame) -> Dict[str, float]:
+  kv = {}
+  for column in frame.columns[1:]:
+    kv[column] = list(frame[column].values)
+  return kv
+
+
 # def _columns_(frame: DataFrame) -> Dict[str, float]:
 #   kv = {}
 #   for (column, index) in zip(list(frame.columns), range(len(frame.columns))):
